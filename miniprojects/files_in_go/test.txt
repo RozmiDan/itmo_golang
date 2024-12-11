@@ -1,0 +1,1 @@
+this string is in file 123Some new string
