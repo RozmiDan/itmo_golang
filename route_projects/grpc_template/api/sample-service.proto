@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package RozmiDan.grpc_template.sample_service.v1
+
+import "google/api/annotations.proto"
+import "validate/validate.proto"
+
+option go_package = "github.com/RozmiDan/grpc_template/pkg/sample_service";
+
+service SampleService {
+  rpc SampleMethod (SampleMethodRequest) returns (SampleMethodResponse);
+}
+
+message Template {
+  uint64 id = 1;
+  string name = 2;
+}
+
+message SampleMethodRequest {
+  uint64 id = 1;
+}
+
+message SampleMethodResponse {
+  Template value = 1;
+}

@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 5s   # как часто опрашивать метрики
+
+scrape_configs:
+  # Prometheus сам мониторит себя:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Добавляем Rule Engine:
+  - job_name: 'rule_engine'
+    static_configs:
+      - targets: ['host.docker.internal:2112'] # или другое, где вы запустили /metrics

@@ -1,0 +1,128 @@
+version: "3.9"
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    networks:
+      - iot-network
+    volumes:
+      - mongo_data:/data/db
+      - ./mongo/mongod.conf:/etc/mongo/mongod.conf
+      - ./data/log:/var/log/mongodb
+    command: ["mongod", "--config", "/etc/mongo/mongod.conf"]
+    # healthcheck:
+    #   test: ["CMD-SHELL", "mongo --eval 'db.runCommand({ ping: 1 })' || exit 1"]
+    #   interval: 5s
+    #   timeout: 5s
+    #   retries: 5
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - iot-network
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin # Имя пользователя по умолчанию
+      - RABBITMQ_DEFAULT_PASS=admin # Пароль пользователя по умолчанию
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    # healthcheck:
+    #   test: ["CMD", "rabbitmq-diagnostics", "ping"]
+    #   interval: 5s
+    #   timeout: 5s
+    #   retries: 5
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    networks:
+      - iot-network
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    # depends_on:
+    #   - prometheus
+    networks:
+      - iot-network
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin # Имя пользователя администратора
+      - GF_SECURITY_ADMIN_PASSWORD=admin # Пароль администратора
+      - GF_LOG_LEVEL=error
+    volumes:
+    - ./grafana_data:/var/lib/grafana
+
+
+  rule-engine:
+    build:
+      context: ./RuleEngine
+    container_name: rule-engine
+    depends_on:
+      rabbitmq:
+        condition: service_healthy  
+      mongodb:
+        condition: service_healthy  
+    networks:
+      - iot-network
+    ports:
+      - "2112:2112"  
+    environment:
+      AMQP: "amqp://guest:guest@some-rabbit:5672/"
+      QUEUE: "iot_data"
+      MONGO_URI: "mongodb://mongo:27017"
+      MONGO_DB: "iot_db"
+      MONGO_COLL: "alerts"
+
+  controller:
+    build:
+      context: ./Controller
+    container_name: controller
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    networks:
+      - iot-network
+    ports:
+      - "8081:8081"
+    environment:
+      AMQP: "amqp://guest:guest@some-rabbit:5672/"
+      QUEUE: "iot_data"
+      MONGO_URI: "mongodb://mongo:27017"
+      MONGO_DB: "iot_db"
+      MONGO_COLL: "messages"
+      SERVER: ":8081"
+
+  simulator:
+    build:
+      context: ./Simulator
+    container_name: simulator
+    depends_on:
+      controller:
+        condition: service_healthy
+      # Или, если нужно, зависеть от rule-engine
+      # rule-engine:
+      #   condition: service_healthy
+    networks:
+      - iot-network
+    environment:
+      DEVICES: "5"
+      RATE: "2"
+      CONTROLLER: "http://controller:8081/data"
+
+networks:
+  iot-network:
+    driver: bridge

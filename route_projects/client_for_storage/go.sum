@@ -1,0 +1,4 @@
+github.com/RozmiDan/storage v1.0.0 h1:/XWFUCAefM/7T+VkJYOIMIwA8oiSysNUMFS4k4vPjDs=
+github.com/RozmiDan/storage v1.0.0/go.mod h1:E6jFnoYng6YV8Yhc8dFTxdZ1w75owEfL2UGN6y8Es98=
+github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
+github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
