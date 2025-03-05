@@ -7,7 +7,7 @@ app:
   version: "1.0.0"
 
 http:
-  port: "8080"
+  port: ":8080"
   timeout: 4s
   idle_timeout: 60s
 

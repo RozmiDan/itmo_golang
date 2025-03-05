@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/RozmiDan/url_shortener/internal/storage"
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/mattn/go-sqlite3"
 )
 
 type Storage struct {
@@ -51,6 +51,11 @@ func (s *Storage) SaveURL(urlToSave string, alias string) (int64, error) {
 
 	res, err := s.db.Exec(query, alias, urlToSave)
 	if err != nil {
+		if sqliteErr, ok := err.(sqlite3.Error); ok {
+			if sqliteErr.Code == sqlite3.ErrConstraint {
+				return 0, storage.ErrURLExists
+			}
+		}
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 

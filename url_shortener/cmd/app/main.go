@@ -1,9 +1,11 @@
 package main
 
 import (
+	"net/http"
 	"os"
 
 	"github.com/RozmiDan/url_shortener/internal/config"
+	save_handler "github.com/RozmiDan/url_shortener/internal/http-server/handlers"
 	middleware_logger "github.com/RozmiDan/url_shortener/internal/http-server/middleware"
 	"github.com/RozmiDan/url_shortener/internal/storage/sqlite"
 	"github.com/RozmiDan/url_shortener/pkg/logger"
@@ -25,10 +27,27 @@ func main() {
 	}
 	_ = storage
 
-	r := chi.NewRouter()
-	r.Use(middleware.RequestID)
-	r.Use(middleware_logger.MyLogger(logger))
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.URLFormat)
+	router := chi.NewRouter()
+	router.Use(middleware.RequestID)
+	router.Use(middleware_logger.MyLogger(logger))
+	router.Use(middleware.Recoverer)
+	router.Use(middleware.URLFormat)
+	router.Post("/url", save_handler.NewSaveHandler(logger, storage))
 
+	logger.Info("starting server")
+
+	server := http.Server{
+		Addr:         cnfg.HttpInfo.Port,
+		Handler:      router,
+		ReadTimeout:  cnfg.HttpInfo.Timeout,
+		WriteTimeout: cnfg.HttpInfo.Timeout,
+		IdleTimeout:  cnfg.HttpInfo.IdleTimeout,
+	}
+
+	err = server.ListenAndServe()
+	if err != nil {
+		logger.Error("Server error", err)
+	}
+
+	logger.Info("Finishing programm")
 }

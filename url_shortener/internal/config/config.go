@@ -22,9 +22,9 @@ type (
 	}
 
 	httpStruct struct {
-		Port         string        `yaml:"port" env-default:"8080"`
-		Timeout      time.Duration `yaml:"timeout" env-default:"5s"`
-		Idle_timeout time.Duration `yaml:"idle_timeout" env-default:"10s"`
+		Port        string        `yaml:"port" env-default:"8080"`
+		Timeout     time.Duration `yaml:"timeout" env-default:"5s"`
+		IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"10s"`
 	}
 )
 
