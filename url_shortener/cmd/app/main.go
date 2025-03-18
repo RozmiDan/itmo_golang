@@ -5,7 +5,8 @@ import (
 	"os"
 
 	"github.com/RozmiDan/url_shortener/internal/config"
-	save_handler "github.com/RozmiDan/url_shortener/internal/http-server/handlers"
+	redirect_handler "github.com/RozmiDan/url_shortener/internal/http-server/handlers/redirect"
+	save_handler "github.com/RozmiDan/url_shortener/internal/http-server/handlers/save"
 	middleware_logger "github.com/RozmiDan/url_shortener/internal/http-server/middleware"
 	"github.com/RozmiDan/url_shortener/internal/storage/sqlite"
 	"github.com/RozmiDan/url_shortener/pkg/logger"
@@ -25,7 +26,6 @@ func main() {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
-	_ = storage
 
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
@@ -33,6 +33,7 @@ func main() {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 	router.Post("/url", save_handler.NewSaveHandler(logger, storage))
+	router.Get("/{alias}", redirect_handler.RedirectHandlerConstructor(logger, storage))
 
 	logger.Info("starting server")
 
